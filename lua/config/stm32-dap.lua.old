@@ -1,0 +1,28 @@
+local dap = require("dap")
+local M = {}
+
+-- Change 'st-util' to 'openocd' if you prefer
+dap.adapters.stlink = {
+  type = "executable",
+  command = "st-util",        -- must be installed
+  args = {},  -- st-util default GDB port
+  attach = { pidProperty = "pid", pidSelect = "ask" },
+}
+
+-- Configuration for your STM32 environment
+dap.configurations.c = {
+  {
+    name = "Debug STM32",
+    type = "stlink",
+    request = "launch",
+    program = ".pio/build/nucleo_h753zi/firmware.elf",
+    cwd = vim.fn.getcwd(),
+    stopAtEntry = true,
+    gdbServer = "localhost:4242",
+  },
+}
+
+dap.configurations.cpp = dap.configurations.c
+dap.configurations.asm = dap.configurations.c
+
+return M

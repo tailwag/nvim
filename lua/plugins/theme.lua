@@ -1,0 +1,1 @@
+/home/island/.config/omarchy/current/theme/neovim.lua

@@ -1,0 +1,54 @@
+return {
+  {
+    "mfussenegger/nvim-dap",
+    dependencies = {
+      "rcarriga/nvim-dap-ui",
+      "theHamsta/nvim-dap-virtual-text",
+      "nvim-neotest/nvim-nio",
+    },
+    config = function()
+      local dap = require("dap")
+      local dapui = require("dapui")
+      local uv = vim.loop
+
+      dapui.setup()
+      require("nvim-dap-virtual-text").setup()
+
+      -- Auto-open/close dap-ui
+      dap.listeners.after.event_initialized["dapui_config"] = function()
+        dapui.open()
+      end
+      dap.listeners.before.event_terminated["dapui_config"] = function()
+        dapui.close()
+      end
+      dap.listeners.before.event_exited["dapui_config"] = function()
+        dapui.close()
+      end
+
+      -- VSCode-like keymaps
+      vim.keymap.set("n", "<F5>", function() dap.continue() end)
+      vim.keymap.set("n", "<F10>", function() dap.step_over() end)
+      vim.keymap.set("n", "<F11>", function() dap.step_into() end)
+      vim.keymap.set("n", "<F12>", function() dap.step_out() end)
+      vim.keymap.set("n", "<Leader>b", function() dap.toggle_breakpoint() end)
+      vim.keymap.set("n", "<Leader>B", function()
+        dap.set_breakpoint(vim.fn.input("Breakpoint condition: "))
+      end)
+
+      -- Helper: auto-launch st-util in the background
+      local function start_stutil_if_needed()
+        local handle
+        handle = uv.spawn("st-util", {}, function(code, signal)
+          if code ~= 0 then
+            print("st-util exited with code", code)
+          end
+          handle:close()
+        end)
+        return handle
+      end
+
+      _G.start_stutil_if_needed = start_stutil_if_needed
+    end,
+  },
+}
+
