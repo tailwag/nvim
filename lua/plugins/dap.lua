@@ -13,40 +13,18 @@ return {
             require("dapui").setup()
             require("nvim-dap-virtual-text").setup()
 
-            dap.adapters.cppdbg = {
-                id = 'cppdbg',
-                type = 'executable',
-                command = '/home/island/.local/share/nvim/mason/packages/cpptools/extension/debugAdapters/bin/OpenDebugAD7',
-            }
             dap.adapters.gdb = {
                 type = "executable",
                 command = "gdb",
                 args = { "--interpreter=dap", "--eval-command", "set pretty print on" },
             }
-            -- dap.configurations.cpp = {
-            --     {
-            --         name = "Launch File",
-            --         type = "cppdbg",
-            --         request = "launch",
-            --         program = function()
-            --             return vim.fn.input("Path to executable: ", vim.fn.getcwd() .. '/', 'file')
-            --         end,
-            --         cwd = '${workspaceFolder}',
-            --         stopAtEntry = true;
-            --     },
-            --     {
-            --         name = 'Attach to gdbserver :1234',
-            --         type = 'cppdbg',
-            --         request = 'launch',
-            --         MIMode = 'gdb',
-            --         miDebuggerServerAddress = 'localhost:1234',
-            --         miDebuggerPath = '/usr/bin/gdb',
-            --         cwd = '${workspaceFolder}',
-            --         program = function()
-            --             return vim.fn.input('Path to executable: ', vim.fn.getcwd() .. '/', 'file')
-            --         end,
-            --     },
-            -- }
+
+            dap.adapters.arm = {
+                type = 'executable',
+                command = 'arm-none-eabi-gdb',
+                args = { '-i=dap' }
+            }
+
             dap.configurations.cpp = {
                 {
                     name = "Launch",
@@ -81,7 +59,22 @@ return {
                       return vim.fn.input('Path to executable: ', vim.fn.getcwd() .. '/', 'file')
                     end,
                     cwd = '${workspaceFolder}'
-                }
+                },
+                {
+                    name = "ST-Link w/ Remote GDB",
+                    type = "arm",
+                    request = "launch",
+                    program = function()
+                        local boardId = vim.fn.input('Board ID: ')
+                        return '${workspaceFolder}/.pio/build/' .. boardId .. '/firmware.elf'
+                    end,
+                    cwd = '${workspaceFolder}',
+                    stopAtEntry = true,
+                    gdb_cmd = 'arm-none-eabi-gdb',
+                    postRunCommands = {
+                        'target extended-remote 127.0.0.1:3333'
+                    }
+                },
             }
             -- VSCode-like keymaps
             vim.keymap.set("n", "<Leader>duo", function() dapui.open() end)
