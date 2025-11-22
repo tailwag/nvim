@@ -7,7 +7,7 @@ return {
             "theHamsta/nvim-dap-virtual-text",
         },
         config = function()
-            local function get_pio_envs()
+            local function autoenvpio()
                 local envs = {}
                 local ini_path = vim.fn.getcwd() .. "/platformio.ini"
 
@@ -22,12 +22,6 @@ return {
                     end
                 end
 
-                return envs
-            end
-
-            local function pick_pio_env(callback)
-                local envs = get_pio_envs()
-
                 if #envs == 0 then
                     vim.notify("No PlatformIO environments found in platformio.ini", vim.log.levels.ERROR)
                     return
@@ -35,23 +29,20 @@ return {
 
                 -- If there's only one, no need to ask
                 if #envs == 1 then
-                    callback(envs[0])
-                    return
+                    return envs[1]
                 end
+
+                local selection = ""
 
                 vim.ui.select(envs, {
                     prompt = "Select PlatformIO Environment:",
                 }, function(choice)
-                    callback(choice)
+                    if choice then
+                        selection = choice
+                    end
                 end)
-            end
 
-            local function auto_pio_elf(callback)
-                pick_pio_env(function(env)
-                    local path = string.format("%s/.pio/build/%s/firmware.elf",
-                        vim.fn.getcwd(), env)
-                    callback(path)
-                end)
+                return selection
             end
 
             local dap = require "dap"
@@ -111,8 +102,12 @@ return {
                     name = "ST-Link w/ Remote GDB",
                     type = "arm",
                     request = "launch",
+                    -- program = function()
+                    --     local boardId = vim.fn.input('Board ID: ')
+                    --     return '${workspaceFolder}/.pio/build/' .. boardId .. '/firmware.elf'
+                    -- end,
                     program = function()
-                        local boardId = vim.fn.input('Board ID: ')
+                        local boardId = autoenvpio()
                         return '${workspaceFolder}/.pio/build/' .. boardId .. '/firmware.elf'
                     end,
                     cwd = '${workspaceFolder}',
