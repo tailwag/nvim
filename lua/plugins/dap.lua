@@ -42,6 +42,8 @@ return {
                     end
                 end)
 
+                vim.notify(selection, vim.log.levels.ERROR)
+
                 return selection
             end
 
